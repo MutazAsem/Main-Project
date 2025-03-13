@@ -35,7 +35,6 @@ class StudentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:students,email',
-            'phone' => 'nullable|string|max:20',
         ]);
 
         $student = Student::create($validated);
@@ -80,9 +79,6 @@ class StudentController extends Controller
         return response()->json(['message' => 'Student updated successfully', 'student' => $student], 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $student = Student::findOrFail($id);
