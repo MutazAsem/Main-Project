@@ -17,40 +17,39 @@ class StudentTest extends TestCase
     {
         Student::factory()->count(3)->create();
 
-
-        $response = $this->get('/students');
+        $response = $this->get(route('students.index'));
 
         $response->assertStatus(200);
-        $response->assertJsonStructure(['students' => []]);
+        $response->assertViewIs('school::StudentList');
+
+        $students = Student::all();
+        foreach ($students as $student) {
+            $response->assertSee($student->name);
+            $response->assertSee($student->email);
+        }
     }
 
     public function test_create(): void
     {
-        $response = $this->get('/students/create');
+        $response = $this->get(route('students.create'));
 
         $response->assertStatus(200);
+        $response->assertViewIs('school::StudentCreate');
     }
 
     public function test_store(): void
     {
-        $data = [
+        $response = $this->post(route('students.store'), [
             'name' => 'John Doe',
-            'email' => 'johndoe@example.com',
-        ];
+            'email' => 'john@example.com',
+        ]);
 
-        $response = $this->postJson('/students', $data);
-
-        $response->assertStatus(201)
-            ->assertJson([
-                'message' => 'Student created successfully',
-                'student' => [
-                    'name' => 'John Doe',
-                    'email' => 'johndoe@example.com',
-                ]
-            ]);
+        $response->assertStatus(302);
+        $response->assertRedirect(route('students.index'));
 
         $this->assertDatabaseHas('students', [
-            'email' => 'johndoe@example.com',
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
         ]);
     }
 
@@ -62,10 +61,10 @@ class StudentTest extends TestCase
             'email' => 'invalid-email',
         ];
 
-        $response = $this->postJson('/students', $data);
+        $response = $this->post(route('students.store'), $data);
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['email']);
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['email']);
     }
 
     public function test_store_it_requires_a_unique_email()
@@ -77,10 +76,11 @@ class StudentTest extends TestCase
             'email' => 'existing@example.com',
         ];
 
-        $response = $this->postJson('/students', $data);
+        $response = $this->post(route('students.store'), $data);
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['email']);
+
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['email']);
     }
 
     public function test_show_success(): void
@@ -90,28 +90,24 @@ class StudentTest extends TestCase
             'email' => 'johndoe@example.com',
         ]);
 
-        $response = $this->getJson("/students/{$student->id}");
+        $response = $this->get(route('students.show', ['student' => $student->id]));
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'student' => [
-                    'id' => $student->id,
-                    'name' => 'John Doe',
-                    'email' => 'johndoe@example.com',
-                ],
-            ]);
+        $response->assertStatus(200);
+
+        $response->assertViewHas('student', function ($viewStudent) use ($student) {
+            return $viewStudent->id === $student->id &&
+                $viewStudent->name === $student->name &&
+                $viewStudent->email === $student->email;
+        });
     }
 
     public function test_show_not_found(): void
     {
         $nonExistentId = 9999;
 
-        $response = $this->getJson("/students/{$nonExistentId}");
+        $response = $this->get(route('students.show', ['student' => $nonExistentId]));
 
-        $response->assertStatus(404)
-            ->assertJson([
-                'message' => "No query results for model [Travelx\\School\\App\\Models\\Student] {$nonExistentId}",
-            ]);
+        $response->assertStatus(404);
     }
 
     public function test_edit_success(): void
@@ -121,28 +117,24 @@ class StudentTest extends TestCase
             'email' => 'johndoe@example.com',
         ]);
 
-        $response = $this->getJson("/students/{$student->id}/edit");
+        $response = $this->get(route('students.edit', ['student' => $student->id]));
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'student' => [
-                    'id' => $student->id,
-                    'name' => 'John Doe',
-                    'email' => 'johndoe@example.com',
-                ],
-            ]);
+        $response->assertStatus(200);
+
+        $response->assertViewHas('student', function ($viewStudent) use ($student) {
+            return $viewStudent->id === $student->id &&
+                $viewStudent->name === $student->name &&
+                $viewStudent->email === $student->email;
+        });
     }
 
     public function test_edit_not_found(): void
     {
         $nonExistentId = 9999;
 
-        $response = $this->getJson("/students/{$nonExistentId}/edit");
+        $response = $this->get(route('students.edit', ['student' => $nonExistentId]));
 
-        $response->assertStatus(404)
-            ->assertJson([
-                'message' => "No query results for model [Travelx\\School\\App\\Models\\Student] {$nonExistentId}",
-            ]);
+        $response->assertStatus(404);
     }
 
     public function test_update_success(): void
@@ -152,28 +144,18 @@ class StudentTest extends TestCase
             'email' => 'johndoe@example.com',
         ]);
 
-        $data = [
-            'name' => 'Jane Doe',
-            'email' => 'janedoe@example.com',
-        ];
-
-        $response = $this->putJson("/students/{$student->id}", $data);
-
-        $response->assertStatus(200)
-            ->assertJson([
-                'message' => 'Student updated successfully',
-                'student' => [
-                    'id' => $student->id,
-                    'name' => 'Jane Doe',
-                    'email' => 'janedoe@example.com',
-                ],
-            ]);
-
-        $this->assertDatabaseHas('students', [
-            'id' => $student->id,
+        $response = $this->put(route('students.update', ['student' => $student->id]), [
             'name' => 'Jane Doe',
             'email' => 'janedoe@example.com',
         ]);
+
+        $response->assertStatus(302);
+
+        $response->assertRedirect(route('students.index'));
+
+        $student->refresh();
+        $this->assertEquals('Jane Doe', $student->name);
+        $this->assertEquals('janedoe@example.com', $student->email);
     }
 
     public function test_update_email_unique_validation(): void
@@ -190,10 +172,10 @@ class StudentTest extends TestCase
             'email' => 'johndoe@example.com',
         ];
 
-        $response = $this->putJson("/students/{$student2->id}", $data);
+        $response = $this->put(route('students.update', ['student' => $student2->id]), $data);
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['email']);
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['email']);
     }
 
     public function test_update_not_found(): void
@@ -205,12 +187,9 @@ class StudentTest extends TestCase
             'email' => 'janedoe@example.com',
         ];
 
-        $response = $this->putJson("/students/{$nonExistentId}", $data);
+        $response = $this->put(route('students.update', ['student' => $nonExistentId]), $data);
 
-        $response->assertStatus(404)
-            ->assertJson([
-                'message' => "No query results for model [Travelx\\School\\App\\Models\\Student] {$nonExistentId}",
-            ]);
+        $response->assertStatus(404);
     }
 
     public function test_destroy_success(): void
@@ -220,13 +199,13 @@ class StudentTest extends TestCase
             'email' => 'johndoe@example.com',
         ]);
 
-        $response = $this->deleteJson("/students/{$student->id}");
+        $response = $this->delete(route('students.destroy', ['student' => $student->id]));
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'message' => 'Student deleted successfully',
-            ]);
-
+        $response->assertStatus(302)
+            ->assertRedirect(route('students.index'));
+    
+        $response->assertSessionHas('success', 'Student deleted successfully!');
+    
         $this->assertDatabaseMissing('students', [
             'id' => $student->id,
         ]);
@@ -236,11 +215,8 @@ class StudentTest extends TestCase
     {
         $nonExistentId = 9999;
 
-        $response = $this->deleteJson("/students/{$nonExistentId}");
+        $response = $this->delete(route('students.destroy', ['student' => $nonExistentId]));
 
-        $response->assertStatus(404)
-            ->assertJson([
-                'message' => "No query results for model [Travelx\\School\\App\\Models\\Student] {$nonExistentId}",
-            ]);
+        $response->assertStatus(404);
     }
 }

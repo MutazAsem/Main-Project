@@ -8,6 +8,8 @@
     <link rel="icon" type="image/png" href="{{ asset('vendor/school/images/logo.png') }}">
     <!-- تحميل ملف CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/school/css/style.css') }}">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
 
     <!-- تحميل ملف JavaScript -->
 
