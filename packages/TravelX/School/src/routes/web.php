@@ -23,5 +23,13 @@ Route::resource('/students', StudentController::class)->names([
     'update' => 'students.update',
     'destroy' => 'students.destroy',
 ]);
-Route::resource('/teachers', TeacherController::class);
+Route::resource('/teachers', TeacherController::class)->names([
+    'index' => 'teachers.index',
+    'create' => 'teachers.create',
+    'store' => 'teachers.store',
+    'show' => 'teachers.show',
+    'edit' => 'teachers.edit',
+    'update' => 'teachers.update',
+    'destroy' => 'teachers.destroy',
+]);
 Route::resource('/subjects', SubjectController::class);
