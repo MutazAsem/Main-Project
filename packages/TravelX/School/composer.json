@@ -10,9 +10,6 @@
             "Travelx\\School\\Database\\Factories\\": "database/factories"
         }
     },
-    "require-dev": {
-        "phpunit/phpunit": "^11.5.3"
-    },
     "authors": [
         {
             "name": "Mutaz"
@@ -27,6 +24,14 @@
             "providers": [
                 "Travelx\\School\\SchoolServiceProvider"
             ]
+        }
+    },
+    "require-dev": {
+        "pestphp/pest": "3.x-dev"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
         }
     }
 }

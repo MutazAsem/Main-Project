@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "39704d5abfa9b827d5a1c0036a66d264",
+    "content-hash": "b5c68cfc7bb2906c0b731fc7e012d132",
     "packages": [
         {
             "name": "brick/math",
@@ -5575,13 +5575,13 @@
             "dist": {
                 "type": "path",
                 "url": "packages/TravelX/School",
-                "reference": "269f40174651b70fdcc2febc665b2e42e5b5c33f"
+                "reference": "4a764c8a054adc589e91a2121b18b66a388758f6"
             },
             "require": {
                 "php": ">=8.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "^11.5.3"
+                "pestphp/pest": "3.x-dev"
             },
             "type": "library",
             "extra": {
